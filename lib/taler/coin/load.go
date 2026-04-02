@@ -12,9 +12,9 @@ import (
 // LoadFromDirectory reads all .talercoin files from the given directory path.
 // Returns only coins with status "fresh".
 func LoadFromDirectory(dirPath string) ([]Coin, error) {
-	const starDotTallerCoin string = "*"+FileExtension // *.talercoin
+	const starDotTalerCoin string = "*"+FileExtension // *.talercoin
 
-	pattern := filepath.Join(dirPath, starDotTallerCoin)
+	pattern := filepath.Join(dirPath, starDotTalerCoin)
 
 	matches, err := filepath.Glob(pattern)
 	if nil != err {
