@@ -27,7 +27,7 @@ func newWindow(app *adw.Application) *Window {
 	var receiver Window
 
 	// install embedded icons
-	installEmbeddedIcons()
+	iconsErr := installEmbeddedIcons()
 
 	// load config and coins
 	config, configErr := libconfig.LoadConfigDir(cfg.ConfigDir(), cfg.DefaultDataDir())
@@ -59,7 +59,10 @@ func newWindow(app *adw.Application) *Window {
 	receiver.window.SetDefaultSize(360, 648)
 	receiver.window.SetContent(receiver.toastOverlay)
 
-	// show error toasts if loading failed
+	// show error toasts if something failed
+	if nil != iconsErr {
+		receiver.toastOverlay.AddToast(adw.NewToast("Could not install icons: " + iconsErr.Error()))
+	}
 	if nil != configErr {
 		receiver.toastOverlay.AddToast(adw.NewToast("Could not load config: " + configErr.Error()))
 	}
