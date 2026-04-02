@@ -18,6 +18,12 @@ type BalanceListPage struct {
 
 	// OnCurrencyActivated is called when the user taps a currency row.
 	OnCurrencyActivated func(currency string)
+
+	// OnSettings is called when the user taps the "Settings" menu item.
+	OnSettings func()
+
+	// OnAbout is called when the user taps the "About" menu item.
+	OnAbout func()
 }
 
 // newBalanceListPage creates the balance list page.
@@ -96,7 +102,52 @@ func newBalanceListPage(balances []libcoin.CurrencyBalance) *BalanceListPage {
 	clamp.SetMaximumSize(600)
 	clamp.SetChild(scrolled)
 
+	// menu popover
+	settingsRow := adw.NewActionRow()
+	settingsRow.SetTitle("Settings")
+	settingsRow.SetActivatable(true)
+	settingsRow.AddPrefix(gtk.NewImageFromIconName("preferences-system-symbolic"))
+
+	aboutRow := adw.NewActionRow()
+	aboutRow.SetTitle("About " + cfg.Name)
+	aboutRow.SetActivatable(true)
+	aboutRow.AddPrefix(gtk.NewImageFromIconName("help-about-symbolic"))
+
+	menuList := gtk.NewListBox()
+	menuList.SetSelectionMode(gtk.SelectionNone)
+	menuList.AddCSSClass("boxed-list")
+	menuList.SetMarginTop(6)
+	menuList.SetMarginBottom(6)
+	menuList.SetMarginStart(6)
+	menuList.SetMarginEnd(6)
+	menuList.Append(settingsRow)
+	menuList.Append(aboutRow)
+
+	popover := gtk.NewPopover()
+	popover.SetChild(menuList)
+
+	menuList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
+		switch row.Index() {
+		case 0:
+			popover.Popdown()
+			if nil != receiver.OnSettings {
+				receiver.OnSettings()
+			}
+		case 1:
+			popover.Popdown()
+			if nil != receiver.OnAbout {
+				receiver.OnAbout()
+			}
+		}
+	})
+
+	menuBtn := gtk.NewMenuButton()
+	menuBtn.SetIconName("open-menu-symbolic")
+	menuBtn.SetTooltipText("Menu")
+	menuBtn.SetPopover(popover)
+
 	header := adw.NewHeaderBar()
+	header.PackEnd(menuBtn)
 
 	toolbar := adw.NewToolbarView()
 	toolbar.AddTopBar(header)

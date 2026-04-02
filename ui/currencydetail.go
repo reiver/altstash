@@ -41,6 +41,14 @@ func newCurrencyDetailPage(currency string, balances []libcoin.ExchangeBalance) 
 	group := adw.NewPreferencesGroup()
 	group.Add(receiver.listBox)
 
+	if 0 == len(balances) {
+		label := gtk.NewLabel("No exchanges for this currency")
+		label.AddCSSClass("dim-label")
+		label.SetMarginTop(24)
+		label.SetMarginBottom(24)
+		group.Add(label)
+	}
+
 	contentBox := gtk.NewBox(gtk.OrientationVertical, 12)
 	contentBox.SetMarginTop(12)
 	contentBox.SetMarginBottom(12)
