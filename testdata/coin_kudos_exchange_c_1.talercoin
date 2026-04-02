@@ -1,0 +1,22 @@
+{
+    "coin_pub": "D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1",
+    "coin_priv": "C3B2A1F6E5D4C3B2A1F6E5D4C3B2A1F6E5D4C3B2A1F6E5D4C3B2A1F6",
+    "denom_pub_hash": "CCCC3333DDDD4444EEEE5555FFFF6666AAAA1111BBBB2222CCCC3333DD",
+    "denom_sig": {
+        "cipher": "RSA",
+        "rsa_signature": "MOCKSIG_KUDOS_C1"
+    },
+    "current_amount": {
+        "currency": "KUDOS",
+        "value": 12,
+        "fraction": 50000000
+    },
+    "exchange_base_url": "https://exchange-c.example/",
+    "blinding_key": "BLIND_KUDOS_C1",
+    "coin_ev_hash": "EVHASH_KUDOS_C1",
+    "status": "fresh",
+    "coin_source": {
+        "type": "withdraw",
+        "reserve_pub": "RESERVE_KUDOS_C"
+    }
+}

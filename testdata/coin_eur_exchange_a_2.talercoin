@@ -1,0 +1,22 @@
+{
+    "coin_pub": "B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5",
+    "coin_priv": "E5D4C3B2A1F6E5D4C3B2A1F6E5D4C3B2A1F6E5D4C3B2A1F6E5D4C3B2",
+    "denom_pub_hash": "AAAA1111BBBB2222CCCC3333DDDD4444EEEE5555FFFF6666AAAA1111BB",
+    "denom_sig": {
+        "cipher": "RSA",
+        "rsa_signature": "MOCKSIG_EUR_A2"
+    },
+    "current_amount": {
+        "currency": "EUR",
+        "value": 2,
+        "fraction": 0
+    },
+    "exchange_base_url": "https://exchange-a.example/",
+    "blinding_key": "BLIND_EUR_A2",
+    "coin_ev_hash": "EVHASH_EUR_A2",
+    "status": "fresh",
+    "coin_source": {
+        "type": "withdraw",
+        "reserve_pub": "RESERVE_EUR_A"
+    }
+}
