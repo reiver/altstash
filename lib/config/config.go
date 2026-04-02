@@ -7,6 +7,11 @@ import (
 	"path/filepath"
 
 	"codeberg.org/reiver/go-erorr"
+	"codeberg.org/reiver/go-field"
+)
+
+const (
+	FileName = "config.json"
 )
 
 // Config holds the user's altstash configuration.
@@ -25,7 +30,7 @@ type Config struct {
 //
 // See also: [LoadFromBytes].
 func LoadConfigDir(configDir string, defaultDataDir string) (Config, error) {
-	configPath := filepath.Join(configDir, "config.json")
+	configPath := filepath.Join(configDir, FileName)
 
 	data, err := os.ReadFile(configPath)
 	if nil != err {
@@ -60,4 +65,32 @@ func LoadFromBytes(bytes []byte, defaultDataDir string) (Config, error) {
 	}
 
 	return config, nil
+}
+
+// Save writes the config to configDir/config.json.
+// Creates the configDir directory if it does not exist.
+func Save(configDir string, config Config) error {
+	err := os.MkdirAll(configDir, 0755)
+	if nil != err {
+		return erorr.Wrap(err, "could not create config directory",
+			field.String("config_dir", configDir),
+		)
+	}
+
+	data, err := json.MarshalIndent(config, "", "    ")
+	if nil != err {
+		return erorr.Wrap(err, "could not marshal config to JSON")
+	}
+
+	configPath := filepath.Join(configDir, FileName)
+
+	err = os.WriteFile(configPath, data, 0644)
+	if nil != err {
+		return erorr.Wrap(err, "could not write config file",
+			field.String("config_dir", configDir),
+			field.String("config_path", configPath),
+		)
+	}
+
+	return nil
 }
