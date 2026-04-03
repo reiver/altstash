@@ -58,6 +58,11 @@ func newWindow(app *adw.Application) *Window {
 	receiver.navView.SetVExpand(true)
 	receiver.navView.Add(receiver.balanceList.page)
 
+	// Remove gesture controllers from NavigationView so its built-in
+	// swipe-back does not steal horizontal swipes from the carousel.
+	// The header bar back button still works for popping CurrencyDetailPage.
+	disableSwipeGestures(receiver.navView)
+
 	// Create placeholder pages
 	receiver.receivePage = newReceivePage()
 	receiver.sendPage = newSendPage()
@@ -207,4 +212,23 @@ func (receiver *Window) refreshBalances() {
 	receiver.balanceList = newBalanceListPage(balances)
 	receiver.wireBalanceListCallbacks()
 	receiver.navView.Add(receiver.balanceList.page)
+}
+
+// disableSwipeGestures removes gesture controllers from a widget so that
+// horizontal swipes propagate to the parent carousel instead.
+func disableSwipeGestures(widget gtk.Widgetter) {
+	w := gtk.BaseWidget(widget)
+	controllers := w.ObserveControllers()
+	n := controllers.NItems()
+	var toRemove []gtk.EventControllerer
+	for i := uint(0); i < n; i++ {
+		obj := controllers.Item(i)
+		casted := obj.Cast()
+		if gesture, ok := casted.(gtk.Gesturer); ok {
+			toRemove = append(toRemove, gesture.(gtk.EventControllerer))
+		}
+	}
+	for _, controller := range toRemove {
+		w.RemoveController(controller)
+	}
 }
