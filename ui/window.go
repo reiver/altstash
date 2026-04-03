@@ -9,6 +9,7 @@ import (
 	libconfig "altstash/lib/config"
 
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
 
 // Window is the main application window.
@@ -16,6 +17,15 @@ type Window struct {
 	window       *adw.ApplicationWindow
 	navView      *adw.NavigationView
 	toastOverlay *adw.ToastOverlay
+
+	carousel    *adw.Carousel
+	bottomBar   *gtk.Box
+	receiveBtn  *gtk.ToggleButton
+	haveBtn     *gtk.ToggleButton
+	sendBtn     *gtk.ToggleButton
+	receivePage *ReceivePage
+	sendPage    *SendPage
+	updatingNav bool
 
 	balanceList *BalanceListPage
 	config      libconfig.Config
@@ -42,11 +52,58 @@ func newWindow(app *adw.Application) *Window {
 	receiver.balanceList = newBalanceListPage(balances)
 	receiver.wireBalanceListCallbacks()
 
+	// Create NavigationView for the Have tab
 	receiver.navView = adw.NewNavigationView()
+	receiver.navView.SetHExpand(true)
+	receiver.navView.SetVExpand(true)
 	receiver.navView.Add(receiver.balanceList.page)
 
+	// Create placeholder pages
+	receiver.receivePage = newReceivePage()
+	receiver.sendPage = newSendPage()
+
+	// Create carousel with 3 pages
+	receiver.carousel = adw.NewCarousel()
+	receiver.carousel.SetAllowMouseDrag(true)
+	receiver.carousel.SetVExpand(true)
+	receiver.carousel.SetHExpand(true)
+	receiver.carousel.Append(receiver.receivePage.widget)
+	receiver.carousel.Append(receiver.navView)
+	receiver.carousel.Append(receiver.sendPage.widget)
+
+	// Create bottom bar with 3 toggle buttons
+	receiver.receiveBtn = gtk.NewToggleButtonWithLabel("Receive")
+	receiver.receiveBtn.SetHExpand(true)
+
+	receiver.haveBtn = gtk.NewToggleButtonWithLabel("Have")
+	receiver.haveBtn.SetHExpand(true)
+	receiver.haveBtn.SetGroup(receiver.receiveBtn)
+
+	receiver.sendBtn = gtk.NewToggleButtonWithLabel("Send")
+	receiver.sendBtn.SetHExpand(true)
+	receiver.sendBtn.SetGroup(receiver.receiveBtn)
+
+	// Default: Have button active
+	receiver.haveBtn.SetActive(true)
+
+	receiver.bottomBar = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	receiver.bottomBar.Append(receiver.receiveBtn)
+	receiver.bottomBar.Append(receiver.haveBtn)
+	receiver.bottomBar.Append(receiver.sendBtn)
+
+	// Outer vertical box: carousel + bottom bar
+	outerBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	outerBox.Append(receiver.carousel)
+	outerBox.Append(receiver.bottomBar)
+
 	receiver.toastOverlay = adw.NewToastOverlay()
-	receiver.toastOverlay.SetChild(receiver.navView)
+	receiver.toastOverlay.SetChild(outerBox)
+
+	// Scroll carousel to page 1 (Have) initially
+	receiver.carousel.ScrollTo(receiver.navView, false)
+
+	// Wire carousel <-> bottom bar sync
+	receiver.wireCarouselNav()
 
 	receiver.window = adw.NewApplicationWindow(&app.Application)
 	receiver.window.SetTitle(cfg.Name)
@@ -68,6 +125,37 @@ func newWindow(app *adw.Application) *Window {
 	}
 
 	return &receiver
+}
+
+// wireCarouselNav connects the carousel page-changed signal and bottom bar
+// toggle buttons to keep them in sync.
+func (receiver *Window) wireCarouselNav() {
+	buttons := []*gtk.ToggleButton{receiver.receiveBtn, receiver.haveBtn, receiver.sendBtn}
+
+	receiver.carousel.ConnectPageChanged(func(index uint) {
+		if index >= uint(len(buttons)) {
+			return
+		}
+		receiver.updatingNav = true
+		buttons[index].SetActive(true)
+		receiver.updatingNav = false
+	})
+
+	wireToggle := func(btn *gtk.ToggleButton, target gtk.Widgetter) {
+		btn.ConnectToggled(func() {
+			if !btn.Active() {
+				return
+			}
+			if receiver.updatingNav {
+				return
+			}
+			receiver.carousel.ScrollTo(target, true)
+		})
+	}
+
+	wireToggle(receiver.receiveBtn, receiver.receivePage.widget)
+	wireToggle(receiver.haveBtn, receiver.navView)
+	wireToggle(receiver.sendBtn, receiver.sendPage.widget)
 }
 
 // wireBalanceListCallbacks sets all callbacks on the current balanceList.
