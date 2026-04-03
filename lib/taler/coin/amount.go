@@ -52,9 +52,11 @@ type Amount struct {
 	Fraction int64  `json:"fraction"`
 }
 
-// Add returns the sum of two amounts. Both must have the same currency.
-// Returns an error if the currencies do not match.
-// Handles fraction overflow: if fractions sum to >= 100,000,000, carries over to value.
+// Add returns the sum of two [Amount].
+//
+// Both [Amount] must have the same currency, else Add returns an error (if the currencies do not match).
+//
+// Add handles fraction overflow: if the two fractions sum to >= 100,000,000, then it carries that over to value.
 func (receiver Amount) Add(other Amount) (Amount, error) {
 	if receiver.Currency != other.Currency {
 		return Amount{}, erorr.Errorf("cannot add amounts with different currencies: %s and %s", receiver.Currency, other.Currency)
