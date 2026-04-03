@@ -146,6 +146,145 @@ func TestAmountAdd(t *testing.T) {
 	}
 }
 
+func TestAmountSub(t *testing.T) {
+	tests := []struct {
+		Name             string
+		A, B             Amount
+		ExpectedValue    int64
+		ExpectedFraction int64
+	}{
+		{
+			Name:             "normal subtraction",
+			A:                Amount{Currency: "EUR", Value: 5, Fraction: 50000000},
+			B:                Amount{Currency: "EUR", Value: 2, Fraction: 30000000},
+			ExpectedValue:    3,
+			ExpectedFraction: 20000000,
+		},
+		{
+			Name:             "fraction borrow",
+			A:                Amount{Currency: "EUR", Value: 5, Fraction: 10000000},
+			B:                Amount{Currency: "EUR", Value: 2, Fraction: 50000000},
+			ExpectedValue:    2,
+			ExpectedFraction: 60000000,
+		},
+		{
+			Name:             "exact zero result",
+			A:                Amount{Currency: "EUR", Value: 3, Fraction: 50000000},
+			B:                Amount{Currency: "EUR", Value: 3, Fraction: 50000000},
+			ExpectedValue:    0,
+			ExpectedFraction: 0,
+		},
+		{
+			Name:             "whole number subtraction",
+			A:                Amount{Currency: "EUR", Value: 10, Fraction: 0},
+			B:                Amount{Currency: "EUR", Value: 3, Fraction: 0},
+			ExpectedValue:    7,
+			ExpectedFraction: 0,
+		},
+		{
+			Name:             "fraction only",
+			A:                Amount{Currency: "EUR", Value: 0, Fraction: 80000000},
+			B:                Amount{Currency: "EUR", Value: 0, Fraction: 30000000},
+			ExpectedValue:    0,
+			ExpectedFraction: 50000000,
+		},
+	}
+
+	for testNumber, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			actual, err := test.A.Sub(test.B)
+			if nil != err {
+				t.Fatalf("For test #%d, unexpected error: %v", testNumber, err)
+			}
+
+			if test.ExpectedValue != actual.Value {
+				t.Errorf("For test #%d, value mismatch.", testNumber)
+				t.Logf("EXPECTED: %d", test.ExpectedValue)
+				t.Logf("ACTUAL:   %d", actual.Value)
+			}
+			if test.ExpectedFraction != actual.Fraction {
+				t.Errorf("For test #%d, fraction mismatch.", testNumber)
+				t.Logf("EXPECTED: %d", test.ExpectedFraction)
+				t.Logf("ACTUAL:   %d", actual.Fraction)
+			}
+		})
+	}
+}
+
+func TestAmountSubInsufficientFunds(t *testing.T) {
+	a := Amount{Currency: "EUR", Value: 2, Fraction: 0}
+	b := Amount{Currency: "EUR", Value: 5, Fraction: 0}
+
+	_, err := a.Sub(b)
+	if nil == err {
+		t.Error("expected error for insufficient funds, got nil")
+	}
+}
+
+func TestAmountSubCurrencyMismatch(t *testing.T) {
+	a := Amount{Currency: "EUR", Value: 5, Fraction: 0}
+	b := Amount{Currency: "KUDOS", Value: 2, Fraction: 0}
+
+	_, err := a.Sub(b)
+	if nil == err {
+		t.Error("expected error for currency mismatch, got nil")
+	}
+}
+
+func TestAmountGreaterThanOrEqual(t *testing.T) {
+	tests := []struct {
+		Name     string
+		A, B     Amount
+		Expected bool
+	}{
+		{
+			Name:     "equal amounts",
+			A:        Amount{Currency: "EUR", Value: 5, Fraction: 50000000},
+			B:        Amount{Currency: "EUR", Value: 5, Fraction: 50000000},
+			Expected: true,
+		},
+		{
+			Name:     "greater value",
+			A:        Amount{Currency: "EUR", Value: 10, Fraction: 0},
+			B:        Amount{Currency: "EUR", Value: 5, Fraction: 0},
+			Expected: true,
+		},
+		{
+			Name:     "lesser value",
+			A:        Amount{Currency: "EUR", Value: 3, Fraction: 0},
+			B:        Amount{Currency: "EUR", Value: 5, Fraction: 0},
+			Expected: false,
+		},
+		{
+			Name:     "equal value greater fraction",
+			A:        Amount{Currency: "EUR", Value: 5, Fraction: 80000000},
+			B:        Amount{Currency: "EUR", Value: 5, Fraction: 50000000},
+			Expected: true,
+		},
+		{
+			Name:     "equal value lesser fraction",
+			A:        Amount{Currency: "EUR", Value: 5, Fraction: 30000000},
+			B:        Amount{Currency: "EUR", Value: 5, Fraction: 50000000},
+			Expected: false,
+		},
+		{
+			Name:     "currency mismatch",
+			A:        Amount{Currency: "EUR", Value: 100, Fraction: 0},
+			B:        Amount{Currency: "KUDOS", Value: 1, Fraction: 0},
+			Expected: false,
+		},
+	}
+
+	for testNumber, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			actual := test.A.GreaterThanOrEqual(test.B)
+			if test.Expected != actual {
+				t.Errorf("For test #%d, expected %v, got %v", testNumber, test.Expected, actual)
+			}
+		})
+	}
+}
+
 func TestAmountAddCurrencyMismatch(t *testing.T) {
 	a := Amount{Currency: "EUR", Value: 1, Fraction: 0}
 	b := Amount{Currency: "KUDOS", Value: 2, Fraction: 0}

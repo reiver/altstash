@@ -84,6 +84,50 @@ func (receiver Amount) String() string {
 	return fmt.Sprintf("%s %s", receiver.FormatValue(), receiver.Currency)
 }
 
+// Sub returns the difference of two [Amount].
+//
+// Both [Amount] must have the same currency, else Sub returns an error (if the currencies do not match).
+//
+// Returns an error if the currencies do not match or the result would be negative.
+// Handles fraction underflow: if receiver.Fraction < other.Fraction, borrows from value.
+func (receiver Amount) Sub(other Amount) (Amount, error) {
+	if receiver.Currency != other.Currency {
+		return Amount{}, erorr.Errorf("cannot subtract amounts with different currencies: %s and %s", receiver.Currency, other.Currency)
+	}
+
+	value := receiver.Value - other.Value
+	fraction := receiver.Fraction - other.Fraction
+
+	if fraction < 0 {
+		value--
+		fraction += fractionBase
+	}
+
+	if value < 0 {
+		return Amount{}, erorr.Errorf("insufficient funds: result would be negative")
+	}
+
+	return Amount{
+		Currency: receiver.Currency,
+		Value:    value,
+		Fraction: fraction,
+	}, nil
+}
+
+// GreaterThanOrEqual returns true if receiver >= other.
+// Both must have the same currency; returns false if currencies differ.
+func (receiver Amount) GreaterThanOrEqual(other Amount) bool {
+	if receiver.Currency != other.Currency {
+		return false
+	}
+
+	if receiver.Value != other.Value {
+		return receiver.Value > other.Value
+	}
+
+	return receiver.Fraction >= other.Fraction
+}
+
 // FormatValue formats the value only, without currency (e.g., "5.23").
 // Used in UI rows where currency is shown separately as the row title.
 func (receiver Amount) FormatValue() string {
