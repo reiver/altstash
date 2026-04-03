@@ -9,7 +9,43 @@ import (
 const fractionBase int64 = 100_000_000
 
 // Amount represents a Taler-compatible monetary amount.
-// The fraction is in units of 1/100,000,000 (10^8).
+//
+// The Fraction field is in units of 1/100,000,000 (10^8).
+// So, the following:
+//
+//	libcoin.Amount{
+//		Currency: "CAD",
+//		Value:    12,
+//	        Fraction: 34000000,
+//	}
+//
+// Represents:
+//
+//	12.34 CAD
+//
+// And, the following:
+//
+//	libcoin.Amount{
+//		Currency: "IRR",
+//		Value:    3,
+//	        Fraction: 14159265,
+//	}
+//
+// Represents:
+//
+//	3.14159265 IRR
+//
+// And, the following:
+//
+//	libcoin.Amount{
+//		Currency: "KRW",
+//		Value:    0,
+//	        Fraction: 00000001,
+//	}
+//
+// Represents:
+//
+//	0.00000001 KRW
 type Amount struct {
 	Currency string `json:"currency"`
 	Value    int64  `json:"value"`
